@@ -1,1 +1,2 @@
-# BTC-Trading-Bot
+# BTC-Trading-Bot using Poloniex api
+
