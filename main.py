@@ -1,53 +1,55 @@
-from poloniex import poloniex
-
-import plotly.plotly as py
-import plotly.graph_objs as go
-
-import numpy as np
 import pandas as pd
+import numpy as np
 
 import time
-import datetime
-
+import datetime 
 import urllib
 import urllib2
+
 import json
-import time
 import hmac,hashlib
 
-class Conections():
+from poloniex import poloniex
+from candle import Candle
 
-	#Connects with Poloniex
-	@staticmethod
-	def _connection(username,password):
-		conn = poloniex(username,password)
-		return conn
+class Trader:
 
-	#Conver time format (Ymd to Unix)
-	@staticmethod
-	def _time_to_unix(date):
-		return time.mktime(datetime.datetime.strptime(date, "%Y%m%d").timetuple())
-
-class Trader(Conections):
-
-	def __init__(self,username,password,startTime,endTime):
-		self.period = [300, 900, 1800, 7200, 4400, 86400]
+	def __init__(self,username,password,startTime,endTime,period):
+		periodList = {'5':300, '15':900, '30':1800, '120':7200, '240':14400, '1440':86400}
+		self.period = periodList[period]
 		self.pair = "USDT_BTC"
 		
-		self.startTime 	= Conections._time_to_unix(startTime)
-		self.endTime 	= Conections._time_to_unix(endTime)
+		self.startTime = self.TimeToUnix(startTime)
+		self.endTime = 	self.TimeToUnix(endTime)
 		
-		if username == '' or password == '':
-			self.username  	= ''
-			self.password	= ''
-		else: 
-			self.username = username
-			self.password = password
+		self.username = username
+		self.password = password
 
-		self.conn = Conections._connection(self.username,self.password)
+		self.CandleData = None
+		self.candles = [] # CANDLE LIST
+		self.conn = self.Connection()
+
+	#Connects with Poloniex
+	def Connection(self):
+		conn = poloniex(self.username,self.password)
+		return conn
+
+	#Get all candles data
+	def getCandleHistoricalData(self):
+		self.CandleData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period})
+		self.candles = Candle(self.CandleData)
+	
+		
+	#Convert time format (Ymd to Unix)
+	def TimeToUnix(self,date):
+		return time.mktime(datetime.datetime.strptime(date, "%Y%m%d").timetuple())
+
+	#Convert time format (Unix to dmY)
+	def UnixToTime(self,date):
+		return datetime.datetime.utcfromtimestamp(float(date)).strftime('%d-%m-%Y')
 
 	#Estructure for ticker
-	def _set_ticker_list(self,ticker):
+	def setTickerList(self,ticker):
 		tickerListNames = ['last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow']
 		tickerList = dict()
 		tickerList['currencyPair'] = [] 
@@ -63,36 +65,41 @@ class Trader(Conections):
 					tickerList[label].append(False)
 		return tickerList
 
-	#Returns ticker in DataFrame
-	def _get_ticker(self):
+	def Get_Ticker(self):
 		ticker = self.conn.returnTicker()
-		tickerList = self._set_ticker_list(ticker)	
-		tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
-		return tickerList
+		tickerList = self.setTickerList(ticker)		
+		self.tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
+		print (tickerList)
 
-	#Returns pair cotation DataFrame
-	def _get_pair_cotation(self	):
-		historicalData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period[1]})
-		return historicalData
+	def buyStrategy(self):
+		for i in range(0, len(self.candles)):
+			if self.candles.open(i) < self.candles.close(i):
+				print("Compre")
 
-
-	def _plotTest(self):
-
-		N = 500
-		random_x = np.linspace(0, 1, N)
-		random_y = np.random.randn(N)
-
-		# Create a trace
-		trace = go.Scatter(
-		    x = random_x,
-		    y = random_y
-		)
-
-		data = [trace]
-
-		py.iplot(data, filename='basic-line')
+	def sellStrategy(self):
+		for i in range(0, len(self.candles)):
+			if self.candles.high(i) > (self.candles.close(i) + 200):
+				print("Venda")
 
 
 
-trader = Trader('','','20170501','20170531')
-trader._get_pair_cotation()
+if __name__ == "__main__":
+
+	startTime = '20171001'
+	endTime = '20171101'
+	period	= '15'
+
+	trader = Trader('','',startTime,endTime,period)
+	trader.Connection()
+	#trader.Get_Ticker()
+	trader.getCandleHistoricalData()
+	
+	#buy and sell orders
+	#trader.buyStrategy()
+	#trader.sellStrategy()
+
+	'''
+	20171023
+	20171126
+
+	'''
