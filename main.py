@@ -1,53 +1,44 @@
 from poloniex import poloniex
-
-import plotly.plotly as py
-import plotly.graph_objs as go
-
-import numpy as np
-import pandas as pd
-
 import time
-import datetime
-
+import pandas as pd
 import urllib
 import urllib2
+import candle
 import json
 import time
 import hmac,hashlib
 
-class Conections():
+class Trader:
 
-	#Connects with Poloniex
-	@staticmethod
-	def _connection(username,password):
-		conn = poloniex(username,password)
-		return conn
-
-	#Conver time format (Ymd to Unix)
-	@staticmethod
-	def _time_to_unix(date):
-		return time.mktime(datetime.datetime.strptime(date, "%Y%m%d").timetuple())
-
-class Trader(Conections):
-
-	def __init__(self,username,password,startTime,endTime):
+	def __init__(self,username,password):
 		self.period = [300, 900, 1800, 7200, 4400, 86400]
 		self.pair = "USDT_BTC"
 		
-		self.startTime 	= Conections._time_to_unix(startTime)
-		self.endTime 	= Conections._time_to_unix(endTime)
+		self.startTime = "1508797168"
+		self.endTime = 	"1511475568"
 		
-		if username == '' or password == '':
-			self.username  	= ''
-			self.password	= ''
-		else: 
-			self.username = username
-			self.password = password
+		self.username = username
+		self.password = password
 
-		self.conn = Conections._connection(self.username,self.password)
+		self.CandleData = None
+		self.candles = [] # CANDLE LIST
+
+	#Connects with Poloniex
+	def Connection(self):
+		conn = poloniex(self.username,self.password)
+		return conn
+
+	def getCandleData(self, conn):
+		#Get all candles data
+		self.CandleData = conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period[0]})
+		self.candles = candle.Candle(self.CandleData)
+		
+	#Conver time format (Ymd to Unix)
+	def TimeToUnix(self,date):
+		return time.mktime(datetime.datetime.strptime(date, "%Y%m%d").timetuple())
 
 	#Estructure for ticker
-	def _set_ticker_list(self,ticker):
+	def setTickerList(self,ticker):
 		tickerListNames = ['last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow']
 		tickerList = dict()
 		tickerList['currencyPair'] = [] 
@@ -63,36 +54,39 @@ class Trader(Conections):
 					tickerList[label].append(False)
 		return tickerList
 
-	#Returns ticker in DataFrame
-	def _get_ticker(self):
-		ticker = self.conn.returnTicker()
-		tickerList = self._set_ticker_list(ticker)	
+	def Get_Ticker(self):
+		conn = self.Connection()
+		
+		self.getCandleData(conn)	 
+
+		startTime = self.startTime
+		endTime = self.endTime
+
+		ticker = conn.returnTicker()
+		
+		tickerList = self.setTickerList(ticker)
+		
 		tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
-		return tickerList
+		print (tickerList)
 
-	#Returns pair cotation DataFrame
-	def _get_pair_cotation(self	):
-		historicalData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period[1]})
-		return historicalData
+		#historicalData = (conn.api_query("returnChartData",{"currencyPair":self.pair,"start":startTime,"end":endTime,"period":self.period[1]}))
+		#print (historicalData)
 
+	def buyStrategy(self):
+		for i in range(0, len(self.candles)):
+			if self.candles.open(i) < self.candles.close(i):
+				print("Compre")
 
-	def _plotTest(self):
-
-		N = 500
-		random_x = np.linspace(0, 1, N)
-		random_y = np.random.randn(N)
-
-		# Create a trace
-		trace = go.Scatter(
-		    x = random_x,
-		    y = random_y
-		)
-
-		data = [trace]
-
-		py.iplot(data, filename='basic-line')
+	def sellStrategy(self):
+		for i in range(0, len(self.candles)):
+			if self.candles.high(i) > (self.candles.close(i) + 200):
+				print("Venda")
 
 
+trader = Trader('','')
+trader.Connection()
+trader.Get_Ticker()
 
-trader = Trader('','','20170501','20170531')
-trader._get_pair_cotation()
+#buy and sell orders
+trader.buyStrategy()
+trader.sellStrategy()
