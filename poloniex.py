@@ -3,7 +3,6 @@ import urllib2
 import json
 import time
 import hmac,hashlib
-import requests
 
 def createTimeStamp(datestr, format="%Y-%m-%d %H:%M:%S"):
     return time.mktime(time.strptime(datestr, format))
@@ -37,6 +36,9 @@ class poloniex:
         elif(command == "returnMarketTradeHistory"):
             ret = urllib2.urlopen(urllib2.Request('https://poloniex.com/public?command=' + "returnTradeHistory" + '&currencyPair=' + str(req['currencyPair'])))
             return json.loads(ret.read())
+        elif(command == "returnChartData"):
+            ret = urllib2.urlopen(urllib2.Request('https://poloniex.com/public?command=returnChartData&currencyPair=' + str(req['currencyPair']) + '&start=' + str(req['start']) + '&end=' + str(req['end']) + '&period=' + str(req['period'])))
+            return json.loads(ret.read())
         else:
             req['command'] = command
             req['nonce'] = int(time.time()*1000)
@@ -48,8 +50,8 @@ class poloniex:
                 'Key': self.APIKey
             }
 
-            ret = requests.post('https://poloniex.com/tradingApi', data=req, headers=headers)
-            jsonRet = json.loads(ret.text)
+            ret = urllib2.urlopen(urllib2.Request('https://poloniex.com/tradingApi', post_data, headers))
+            jsonRet = json.loads(ret.read())
             return self.post_process(jsonRet)
 
 

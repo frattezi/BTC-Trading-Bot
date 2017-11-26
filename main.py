@@ -7,37 +7,47 @@ import numpy as np
 import pandas as pd
 
 import time
+import datetime
+
 import urllib
 import urllib2
 import json
 import time
 import hmac,hashlib
 
-class Trader():
-
-	def __init__(self,username,password):
-		self.period = [300, 900, 1800, 7200, 4400, 86400]
-		self.pair = "USDT_BTC"
-		
-		self.startTime = '20160501'
-		self.endTime = 	'20170501'
-		
-		self.username = username
-		self.password = password
-		
-		
+class Conections():
 
 	#Connects with Poloniex
-	def Connection(self):
-		conn = poloniex(self.username,self.password)
+	@staticmethod
+	def _connection(username,password):
+		conn = poloniex(username,password)
 		return conn
 
 	#Conver time format (Ymd to Unix)
-	def TimeToUnix(self,date):
+	@staticmethod
+	def _time_to_unix(date):
 		return time.mktime(datetime.datetime.strptime(date, "%Y%m%d").timetuple())
 
+class Trader(Conections):
+
+	def __init__(self,username,password,startTime,endTime):
+		self.period = [300, 900, 1800, 7200, 4400, 86400]
+		self.pair = "USDT_BTC"
+		
+		self.startTime 	= Conections._time_to_unix(startTime)
+		self.endTime 	= Conections._time_to_unix(endTime)
+		
+		if username == '' or password == '':
+			self.username  	= ''
+			self.password	= ''
+		else: 
+			self.username = username
+			self.password = password
+
+		self.conn = Conections._connection(self.username,self.password)
+
 	#Estructure for ticker
-	def setTickerList(self,ticker):
+	def _set_ticker_list(self,ticker):
 		tickerListNames = ['last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow']
 		tickerList = dict()
 		tickerList['currencyPair'] = [] 
@@ -54,19 +64,19 @@ class Trader():
 		return tickerList
 
 	#Returns ticker in DataFrame
-	def Get_Ticker(self):
-		conn = self.Connection()
-			 
-		startTime = self.startTime
-		endTime = self.endTime
+	def _get_ticker(self):
 
-		ticker = conn.returnTicker()
-		
-		tickerList = self.setTickerList(ticker)
-		
+		ticker = self.conn.returnTicker()
+		tickerList = self._set_ticker_list(ticker)	
 		tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
-		print (tickerList)
+		return tickerList
 
+	#Returns pair cotation DataFrame
+	def _get_pair_cotation(self):
+
+		historicalData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period[1]})
+		return historicalData
+		
 
 	def _plotTest(self):
 
@@ -86,5 +96,5 @@ class Trader():
 
 
 
-trader = Trader('','')
-trader._plotTest()
+trader = Trader('','','20170501','20170531')
+trader._get_pair_cotation()
