@@ -65,18 +65,16 @@ class Trader(Conections):
 
 	#Returns ticker in DataFrame
 	def _get_ticker(self):
-
 		ticker = self.conn.returnTicker()
 		tickerList = self._set_ticker_list(ticker)	
 		tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
 		return tickerList
 
 	#Returns pair cotation DataFrame
-	def _get_pair_cotation(self):
-
+	def _get_pair_cotation(self	):
 		historicalData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period[1]})
 		return historicalData
-		
+
 
 	def _plotTest(self):
 
