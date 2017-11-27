@@ -32,4 +32,3 @@ class Candle:
 
 	def date(self,index):
 		return self.candle_list['date'][index]
-
