@@ -82,12 +82,15 @@ class Trader:
 		self.tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
 		print (tickerList)
 
-	def Estrategy(self):
+	# OBS :Poderia ter apenas dado pass nos 50 primeiros e usar slicing para controlar as janelas
+	def BacktestEstrategy(self):
 		SimpleAvData = []
 		ExpAvData = []
 		prevExpAv30 = None
 		prevExpAv20	= None
-		comprou = 0
+		firstCandle = True
+		bank = 0
+		counter = 0
 		for x in range(0,len(self.candles)):
 			#starting average vectors
 			if x <	50:
@@ -98,26 +101,51 @@ class Trader:
 					ExpAvData.append(self.candles.close(x))
 					ExpAvData.pop(0)
 			else:
+				if firstCandle == True:
+					PrevSimpleAv20 = None
+					PrevSimpleAv50 = None
+					firstCandle = False
+				else:
+					if counter < 4:
+						print (x)
+						print (SimpleAvData)
+						counter+=1
+					SimpleAvData.append(self.candles.close(x))
+					SimpleAvData.pop(0)
 
-				SimpleAv = self.MMS(SimpleAvData)
-				ExpAvData30, prevExpAv30 = self.MME(ExpAvData,prevExpAv30,30)
-				ExpAvData20, prevExpAv20 = self.MME(ExpAvData,prevExpAv20,20)
+					ExpAvData.append(self.candles.close(x))
+					ExpAvData.pop(0)
+
+					SimpleAv20,SimpleAv50 = self.MMS(SimpleAvData)
+					ExpAvData30, prevExpAv30 = self.MME(ExpAvData,prevExpAv30,30)
+					ExpAvData20, prevExpAv20 = self.MME(ExpAvData,prevExpAv20,20)
+					
 				
-				#Lembrar de colocar para nao comprar novamente nos candles futuros ate ocorrer um ponto de venda
-				if SimpleAv > ExpAvData30 and SimpleAv > ExpAvData20 :
-					print ('')
-					comprou -= self.candles.open(x)
+					if self.candles.close(x-1) > PrevSimpleAv20 and self.candles.close(x) < SimpleAv20:
+						#print ('comprar')
+						pass
 
-				if SimpleAv < ExpAvData30 and SimpleAv < ExpAvData20 :
-					comprou += self.candles.open(x)
+					if self.candles.close(x-1) > PrevSimpleAv20 and self.candles.close(x) < SimpleAv20:
+						#print ('vender')
+						pass
 
-		print (comprou)
-		print ('e isso ai')
+					#implementar medias curtas cruzando longas ou exponenciais
 
+
+
+					'''
+					#Lembrar de colocar para nao comprar novamente nos candles futuros ate ocorrer um ponto de venda
+					if SimpleAv > ExpAvData30 and SimpleAv > ExpAvData20 :
+						comprou -= self.candles.open(x)
+
+					if SimpleAv < ExpAvData30 and SimpleAv < ExpAvData20 :
+						comprou += self.candles.open(x)
+					'''
 
 	#Media Movel Simples
 	def MMS(self,SimpleAvData):
-		return np.average(SimpleAvData)
+		#print (len(SimpleAvData))
+		return np.average(SimpleAvData),np.average(SimpleAvData[30:])
 
 	#Media Movel Exponencial
 	def MME(self,ExpAvData,prevEMA,period):
@@ -141,13 +169,13 @@ class Trader:
 
 if __name__ == "__main__":
 
-	startTime = '20171001'
-	endTime = '20171101'
+	startTime = '20170901'
+	endTime = '20171001'
 	period	= '15'
 
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
 	#trader.Get_Ticker()
 	trader.getCandleHistoricalData()
-	trader.Estrategy()
+	trader.BacktestEstrategy()
 	
