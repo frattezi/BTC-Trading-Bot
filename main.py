@@ -12,6 +12,8 @@ import hmac,hashlib
 from poloniex import poloniex
 from candle import Candle
 
+import player
+
 class Trader:
 
 	def __init__(self,username,password,startTime,endTime,period):
@@ -28,6 +30,8 @@ class Trader:
 		self.CandleData = None
 		self.candles = [] # CANDLE LIST
 		self.conn = self.Connection()
+
+		self.mercador = player.Player()
 
 	#Connects with Poloniex
 	def Connection(self):
@@ -89,6 +93,9 @@ class Trader:
 		prevExpAv30 = None
 		prevExpAv20	= None
 		firstCandle = True
+		ExpAvData30 = None
+		ExpAvData20 = None
+
 		bank = 0
 		counter = 0
 		for x in range(0,len(self.candles)):
@@ -107,8 +114,8 @@ class Trader:
 					firstCandle = False
 				else:
 					if counter < 4:
-						print (x)
-						print (SimpleAvData)
+						#print (x)
+						#print (SimpleAvData)
 						counter+=1
 					SimpleAvData.append(self.candles.close(x))
 					SimpleAvData.pop(0)
@@ -117,8 +124,12 @@ class Trader:
 					ExpAvData.pop(0)
 
 					SimpleAv20,SimpleAv50 = self.MMS(SimpleAvData)
-					ExpAvData30, prevExpAv30 = self.MME(ExpAvData,prevExpAv30,30)
-					ExpAvData20, prevExpAv20 = self.MME(ExpAvData,prevExpAv20,20)
+					ExpAvData30, prevExpAv30 = self.MME(ExpAvData30, self.candles.close(x), 30)
+					ExpAvData20, prevExpAv20 = self.MME(ExpAvData20, self.candles.close(x), 20)
+
+					print("SimpleAvg = ", SimpleAv20)
+					print("ExpAvg30 = ", ExpAvData30)
+					print("ExpAvg20 = ", ExpAvData20)
 					
 				
 					if self.candles.close(x-1) > PrevSimpleAv20 and self.candles.close(x) < SimpleAv20:
@@ -148,21 +159,14 @@ class Trader:
 		return np.average(SimpleAvData),np.average(SimpleAvData[30:])
 
 	#Media Movel Exponencial
-	def MME(self,ExpAvData,prevEMA,period):
-		multiplier = None
-		if prevEMA == None:
-			mms = self.MMS(ExpAvData)
-			multiplier = (2/(period+1))
-			mme = (ExpAvData[len(ExpAvData)-1] - mms)*multiplier+mms
-			return mme, mms
-		
+	def MME(self, prevEMA, lastCandleValue, period):
+		if prevEMA != None:
+			mme = ((lastCandleValue * period) + (prevEMA * (100-period)))/100
+			new_prevEMA = prevEMA
 		else:
-			multiplier = (2/(period+1))
-			mme = (ExpAvData[len(ExpAvData)-1] - prevEMA)*multiplier+prevEMA
-			return mme, prevEMA
-		
-
-
+			mme = lastCandleValue
+			new_prevEMA = mme
+		return mme, new_prevEMA
 
 
 
