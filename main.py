@@ -131,7 +131,6 @@ class Trader:
 					print("ExpAvg30 = ", ExpAvData30)
 					print("ExpAvg20 = ", ExpAvData20)
 					
-				
 					if self.candles.close(x-1) > PrevSimpleAv20 and self.candles.close(x) < SimpleAv20:
 						#print ('comprar')
 						pass
