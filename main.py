@@ -12,6 +12,9 @@ import hmac,hashlib
 from poloniex import poloniex
 from candle import Candle
 
+from player import Player
+from Strategy import BacktestStrategy
+
 class Trader:
 
 	def __init__(self,username,password,startTime,endTime,period):
@@ -30,6 +33,9 @@ class Trader:
 		self.candles = [] # CANDLE LIST
 
 		self.conn = self.Connection()
+
+		self.player1 = Player()
+		self.player2 = Player()
 
 	#Connects with Poloniex
 	def Connection(self):
@@ -82,14 +88,27 @@ class Trader:
 		ticker = self.conn.returnTicker()
 		tickerList = self.setTickerList(ticker)		
 		self.tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
-		print (tickerList)
+		return self.tickerList
 
-	def Estrategy(self):
+	# OBS :Poderia ter apenas dado pass nos 50 primeiros e usar slicing para controlar as janelas - mais facil
+	def Backtest(self):
+		strat1 = BacktestStrategy()
+		strat2 = BacktestStrategy()
+		
+		player1 = Player()
+		
 		SimpleAvData = []
 		ExpAvData = []
-		prevExpAv30 = None
+		
 		prevExpAv20	= None
-		comprou = 0
+		prevExpAv30 = None
+		ExpAvData20 = None
+		ExpAvData30 = None
+		firstCandle = True
+		
+		bank = 0
+		counter = 0
+		
 		for x in range(0,len(self.candles)):
 			#starting average vectors
 			if x <	50:
@@ -100,56 +119,69 @@ class Trader:
 					ExpAvData.append(self.candles.close(x))
 					ExpAvData.pop(0)
 			else:
+				if firstCandle == True:
+					PrevSimpleAv20 = None
+					PrevSimpleAv50 = None
+					firstCandle = False
+				else:
 
-				SimpleAv = self.MMS(SimpleAvData)
-				ExpAvData30, prevExpAv30 = self.MME(ExpAvData,prevExpAv30,30)
-				ExpAvData20, prevExpAv20 = self.MME(ExpAvData,prevExpAv20,20)
-				
-				#Lembrar de colocar para nao comprar novamente nos candles futuros ate ocorrer um ponto de venda
-				if SimpleAv > ExpAvData30 and SimpleAv > ExpAvData20 :
-					print ('')
-					comprou -= self.candles.open(x)
+					SimpleAvData.append(self.candles.close(x))
+					SimpleAvData.pop(0)
 
-				if SimpleAv < ExpAvData30 and SimpleAv < ExpAvData20 :
-					comprou += self.candles.open(x)
+					ExpAvData.append(self.candles.close(x))
+					ExpAvData.pop(0)
 
-		print (comprou)
-		print ('e isso ai')
 
+
+					SimpleAv20,SimpleAv50 = self.MMS(SimpleAvData)
+					ExpAvData30, prevExpAv30 = self.MME(ExpAvData30, self.candles.close(x), 30)
+					ExpAvData20, prevExpAv20 = self.MME(ExpAvData20, self.candles.close(x), 20)
+					
+					'''
+					Agora abaixo vao as estrategias chamadas da class Strategy, podemos
+					instaciar um objeto de class para cada estrategia e ter todos os resultados do 
+					backtest ao final da apresentacao
+					'''
+					if PrevSimpleAv20 == None:
+						PrevSimpleAv20 = SimpleAv20
+					
+					else:
+						strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
+						strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20)
+					PrevSimpleAv20 = SimpleAv20
+
+
+		return player1	
 
 	#Media Movel Simples
 	def MMS(self,SimpleAvData):
-		return np.average(SimpleAvData)
+		#print (len(SimpleAvData))
+		return np.average(SimpleAvData),np.average(SimpleAvData[30:])
 
 	#Media Movel Exponencial
-	def MME(self,ExpAvData,prevEMA,period):
-		multiplier = None
-		if prevEMA == None:
-			mms = self.MMS(ExpAvData)
-			multiplier = (2/(period+1))
-			mme = (ExpAvData[len(ExpAvData)-1] - mms)*multiplier+mms
-			return mme, mms
-		
+	def MME(self, prevEMA, lastCandleValue, period):
+		if prevEMA != None:
+			mme = ((lastCandleValue * period) + (prevEMA * (100-period)))/100
+			new_prevEMA = prevEMA
 		else:
-			multiplier = (2/(period+1))
-			mme = (ExpAvData[len(ExpAvData)-1] - prevEMA)*multiplier+prevEMA
-			return mme, prevEMA
-		
-
-
+			mme = lastCandleValue
+			new_prevEMA = mme
+		return mme, new_prevEMA
 
 
 
 
 if __name__ == "__main__":
 
-	startTime = '20171001'
-	endTime = '20171101'
+	startTime = '20170901'
+	endTime = '20171001'
 	period	= '15'
-
+	
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
-	#trader.Get_Ticker()
 	trader.getCandleHistoricalData()
-	trader.Estrategy()
-	
+	trader.Backtest()
+	tickerlist = trader.Get_Ticker()
+	lastprice = (float(tickerlist['last'][20]))
+
+	trader.player1.SowFinalResults(lastprice)		#tickerlist = Last USDT-BTC sell value
