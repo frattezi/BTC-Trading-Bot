@@ -130,11 +130,6 @@ class Trader:
 					ExpAvData20, prevExpAv20 = self.MME(ExpAvData20, self.candles.close(x), 20)
 					
 
-
-
-
-
-
 					'''
 					Agora abaixo vao as estrategias chamadas da class Strategy, podemos
 					instaciar um objeto de class para cada estrategia e ter todos os resultados do 
