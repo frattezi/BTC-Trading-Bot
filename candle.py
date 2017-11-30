@@ -31,3 +31,8 @@ class Candle:
 
 	def date(self,index):
 		return self.candle_list['date'][index]
+
+	def CloseDate(self,index):
+
+		return [self.candle_list['close'][index],self.candle_list['date'][index]]
+	

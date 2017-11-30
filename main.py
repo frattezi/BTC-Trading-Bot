@@ -12,7 +12,8 @@ import hmac,hashlib
 from poloniex import poloniex
 from candle import Candle
 
-import player
+from player import Player
+from Strategy import BacktestStrategy
 
 class Trader:
 
@@ -31,7 +32,7 @@ class Trader:
 		self.candles = [] # CANDLE LIST
 		self.conn = self.Connection()
 
-		self.mercador = player.Player()
+		self.player1 = Player()
 
 	#Connects with Poloniex
 	def Connection(self):
@@ -84,10 +85,10 @@ class Trader:
 		ticker = self.conn.returnTicker()
 		tickerList = self.setTickerList(ticker)		
 		self.tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
-		print (tickerList)
+		return self.tickerList
 
-	# OBS :Poderia ter apenas dado pass nos 50 primeiros e usar slicing para controlar as janelas
-	def BacktestEstrategy(self):
+	# OBS :Poderia ter apenas dado pass nos 50 primeiros e usar slicing para controlar as janelas - mais facil
+	def Backtest(self):
 		SimpleAvData = []
 		ExpAvData = []
 		prevExpAv30 = None
@@ -95,6 +96,8 @@ class Trader:
 		firstCandle = True
 		ExpAvData30 = None
 		ExpAvData20 = None
+		player1 = Player()
+		strat1 = BacktestStrategy()
 
 		bank = 0
 		counter = 0
@@ -113,45 +116,40 @@ class Trader:
 					PrevSimpleAv50 = None
 					firstCandle = False
 				else:
-					if counter < 4:
-						#print (x)
-						#print (SimpleAvData)
-						counter+=1
+
 					SimpleAvData.append(self.candles.close(x))
 					SimpleAvData.pop(0)
 
 					ExpAvData.append(self.candles.close(x))
 					ExpAvData.pop(0)
 
+
+
 					SimpleAv20,SimpleAv50 = self.MMS(SimpleAvData)
 					ExpAvData30, prevExpAv30 = self.MME(ExpAvData30, self.candles.close(x), 30)
 					ExpAvData20, prevExpAv20 = self.MME(ExpAvData20, self.candles.close(x), 20)
-
-					print("SimpleAvg = ", SimpleAv20)
-					print("ExpAvg30 = ", ExpAvData30)
-					print("ExpAvg20 = ", ExpAvData20)
 					
-				
-					if self.candles.close(x-1) > PrevSimpleAv20 and self.candles.close(x) < SimpleAv20:
-						#print ('comprar')
-						pass
 
-					if self.candles.close(x-1) > PrevSimpleAv20 and self.candles.close(x) < SimpleAv20:
-						#print ('vender')
-						pass
 
-					#implementar medias curtas cruzando longas ou exponenciais
+
 
 
 
 					'''
-					#Lembrar de colocar para nao comprar novamente nos candles futuros ate ocorrer um ponto de venda
-					if SimpleAv > ExpAvData30 and SimpleAv > ExpAvData20 :
-						comprou -= self.candles.open(x)
-
-					if SimpleAv < ExpAvData30 and SimpleAv < ExpAvData20 :
-						comprou += self.candles.open(x)
+					Agora abaixo vao as estrategias chamadas da class Strategy, podemos
+					instaciar um objeto de class para cada estrategia e ter todos os resultados do 
+					backtest ao final da apresentacao
 					'''
+					if PrevSimpleAv20 == None:
+						PrevSimpleAv20 = SimpleAv20
+					
+					else:
+						strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
+						
+					PrevSimpleAv20 = SimpleAv20
+
+
+		return player1	
 
 	#Media Movel Simples
 	def MMS(self,SimpleAvData):
@@ -176,10 +174,12 @@ if __name__ == "__main__":
 	startTime = '20170901'
 	endTime = '20171001'
 	period	= '15'
-
+	
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
-	#trader.Get_Ticker()
 	trader.getCandleHistoricalData()
-	trader.BacktestEstrategy()
-	
+	trader.Backtest()
+	tickerlist = trader.Get_Ticker()
+	lastprice = (float(tickerlist['last'][20]))
+
+	trader.player1.SowFinalResults(lastprice)		#tickerlist = Last USDT-BTC sell value
