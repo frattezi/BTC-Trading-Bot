@@ -24,12 +24,14 @@ class Trader:
 		
 		self.startTime = self.TimeToUnix(startTime)
 		self.endTime = 	self.TimeToUnix(endTime)
+
 		
 		self.username = username
 		self.password = password
 
 		self.CandleData = None
 		self.candles = [] # CANDLE LIST
+
 		self.conn = self.Connection()
 
 		self.player1 = Player()

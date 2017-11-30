@@ -7,6 +7,7 @@ class Candle:
 		df = pd.DataFrame(historical_candles)
 		df['date'] = pd.to_datetime(df["date"], unit='s')
 		self.candle_list = df
+
 		
 	def __len__(self):
 		return len(self.candle_list)
