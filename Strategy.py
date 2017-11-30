@@ -12,3 +12,19 @@ class BacktestStrategy:
 			print ('compra')
 			player.Compra(candle[0],candle[1])
 			
+
+
+	def ExpSimpleAv(self):
+		if SimpleAv > Avg30 and SimpleAv > Avg20 :
+				compra
+
+
+
+
+			if SimpleAv < Avg30 and SimpleAv < Avg20 :
+
+					venda
+
+
+
+	

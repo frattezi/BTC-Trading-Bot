@@ -33,6 +33,7 @@ class Trader:
 		self.conn = self.Connection()
 
 		self.player1 = Player()
+		self.player2 = Player()
 
 	#Connects with Poloniex
 	def Connection(self):
@@ -89,18 +90,23 @@ class Trader:
 
 	# OBS :Poderia ter apenas dado pass nos 50 primeiros e usar slicing para controlar as janelas - mais facil
 	def Backtest(self):
+		strat1 = BacktestStrategy()
+		strat2 = BacktestStrategy()
+		
+		player1 = Player()
+		
 		SimpleAvData = []
 		ExpAvData = []
-		prevExpAv30 = None
+		
 		prevExpAv20	= None
-		firstCandle = True
-		ExpAvData30 = None
+		prevExpAv30 = None
 		ExpAvData20 = None
-		player1 = Player()
-		strat1 = BacktestStrategy()
-
+		ExpAvData30 = None
+		firstCandle = True
+		
 		bank = 0
 		counter = 0
+		
 		for x in range(0,len(self.candles)):
 			#starting average vectors
 			if x <	50:
@@ -129,7 +135,6 @@ class Trader:
 					ExpAvData30, prevExpAv30 = self.MME(ExpAvData30, self.candles.close(x), 30)
 					ExpAvData20, prevExpAv20 = self.MME(ExpAvData20, self.candles.close(x), 20)
 					
-
 					'''
 					Agora abaixo vao as estrategias chamadas da class Strategy, podemos
 					instaciar um objeto de class para cada estrategia e ter todos os resultados do 
@@ -140,7 +145,7 @@ class Trader:
 					
 					else:
 						strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
-						
+						strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20)
 					PrevSimpleAv20 = SimpleAv20
 
 
