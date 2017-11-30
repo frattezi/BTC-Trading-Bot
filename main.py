@@ -33,6 +33,8 @@ class Trader:
 
 		self.mercador = player.Player()
 
+		self.onTop = None
+
 	#Connects with Poloniex
 	def Connection(self):
 		counter = 0
@@ -93,6 +95,7 @@ class Trader:
 		prevExpAv30 = None
 		prevExpAv20	= None
 		firstCandle = True
+		firstIteration = True
 		ExpAvData30 = None
 		ExpAvData20 = None
 
@@ -127,10 +130,17 @@ class Trader:
 					ExpAvData30, prevExpAv30 = self.MME(ExpAvData30, self.candles.close(x), 30)
 					ExpAvData20, prevExpAv20 = self.MME(ExpAvData20, self.candles.close(x), 20)
 
-					print("SimpleAvg = ", SimpleAv20)
-					print("ExpAvg30 = ", ExpAvData30)
-					print("ExpAvg20 = ", ExpAvData20)
+					# print("SimpleAvg = ", SimpleAv20)
+					# print("ExpAvg30 = ", ExpAvData30)
+					# print("ExpAvg20 = ", ExpAvData20)
 					
+					if firstIteration:
+						if SimpleAv20 > ExpAvData20 and SimpleAv20 > ExpAvData30:
+							onTop = 'SimpleMM'
+						else:
+							onTop = 'ExponentialMM'
+						firstIteration = False
+
 					if self.candles.close(x-1) > PrevSimpleAv20 and self.candles.close(x) < SimpleAv20:
 						#print ('comprar')
 						pass
@@ -139,6 +149,7 @@ class Trader:
 						#print ('vender')
 						pass
 
+					onTop = self.checkCross(SimpleAv20, ExpAvData20, ExpAvData30, onTop)
 					#implementar medias curtas cruzando longas ou exponenciais
 
 
@@ -167,11 +178,27 @@ class Trader:
 			new_prevEMA = mme
 		return mme, new_prevEMA
 
-
+	def checkCross(self, SimpleMM, Expo20MM, Expo30MM, onTop):
+		if onTop == "SimpleMM":
+			if Expo20MM > SimpleMM and Expo30MM > SimpleMM:
+				onTop = "ExponentialMM"
+				print("Simple = ", SimpleMM)
+				print("Exp20 = ", Expo20MM)
+				print("Exp30 = ", Expo30MM)
+				print("Compre tudo VIAAAAADO")
+				print("\n\n\n")
+		elif onTop == "ExponentialMM":
+			if SimpleMM > Expo20MM and SimpleMM > Expo30MM:
+				onTop = "SimpleMM"
+				print("Simple = ", SimpleMM)
+				print("Exp20 = ", Expo20MM)
+				print("Exp30 = ", Expo30MM)
+				print("Vende tudo VIAAADO")
+				print("\n\n\n")
+		return onTop	
 
 
 if __name__ == "__main__":
-
 	startTime = '20170901'
 	endTime = '20171001'
 	period	= '15'
