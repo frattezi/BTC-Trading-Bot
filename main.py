@@ -53,11 +53,6 @@ class Trader:
 					print ('fail connection please try again')
 					break
 
-	#Get all candles data
-	def getCandleHistoricalData(self):
-		self.CandleData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period})
-		self.candles = Candle(self.CandleData)
-	
 		
 	#Convert time format (Ymd to Unix)
 	def TimeToUnix(self,date):
@@ -84,6 +79,11 @@ class Trader:
 					tickerList[label].append(False)
 		return tickerList
 
+	#Get all candles data
+	def getCandleHistoricalData(self):
+		self.CandleData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period})
+		self.candles = Candle(self.CandleData)
+	
 	def Get_Ticker(self):
 		ticker = self.conn.returnTicker()
 		tickerList = self.setTickerList(ticker)		

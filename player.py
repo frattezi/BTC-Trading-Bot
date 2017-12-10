@@ -21,6 +21,7 @@ class Player:
 
 	def Venda(self, valor,date):
 		if self.quantidade_ativos > 1:
+			print ('Venda')
 			self.money = self.money + valor
 			self.quantidade_ativos = self.quantidade_ativos - 1
 			self.vendas_realizadas = self.vendas_realizadas + 1
@@ -28,6 +29,7 @@ class Player:
 	
 	def Compra(self, valor,date):
 		if self.PlayerRules(valor):
+			print ('Compra')
 			self.money = self.money - valor
 			self.quantidade_ativos = self.quantidade_ativos + 1
 			self.compras_realizadas = self.compras_realizadas + 1
