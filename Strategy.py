@@ -4,26 +4,21 @@ class BacktestStrategy:
 
 
 		if candle[0] > PrevSimpleAv20 and candle[0] < SimpleAv20:
-			print ('Venda')
 			player.Venda(candle[0],candle[1])
 			
 	
 		if candle[0] < PrevSimpleAv20 and candle[0] > SimpleAv20:
-			print ('compra')
 			player.Compra(candle[0],candle[1])
 			
 
 
-	def ExpSimpleAv(self):
+	def ExpSimpleAv(self,player,candle,SimpleAv,Avg20,Avg30):
 		if SimpleAv > Avg30 and SimpleAv > Avg20 :
-				compra
+			player.Compra(candle[0],candle[1])
 
 
-
-
-			if SimpleAv < Avg30 and SimpleAv < Avg20 :
-
-					venda
+		if SimpleAv < Avg30 and SimpleAv < Avg20 :
+			player.Venda(candle[0],candle[1])
 
 
 
