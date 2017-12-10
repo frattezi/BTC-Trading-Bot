@@ -20,8 +20,12 @@ class Player:
 
 
 	def Venda(self, valor,date):
+<<<<<<< HEAD
 		if self.quantidade_ativos > 1:
 			print ('Venda')
+=======
+		if self.quantidade_ativos > 0:
+>>>>>>> 289dc8929271fd2e298a49f63940e8069d3d298a
 			self.money = self.money + valor
 			self.quantidade_ativos = self.quantidade_ativos - 1
 			self.vendas_realizadas = self.vendas_realizadas + 1

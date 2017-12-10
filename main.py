@@ -21,7 +21,9 @@ class Trader:
 		periodList = {'5':300, '15':900, '30':1800, '120':7200, '240':14400, '1440':86400}
 		self.period = periodList[period]
 		self.pair = "USDT_BTC"
-		
+		self.onTop = "SimpleMM"
+
+
 		self.startTime = self.TimeToUnix(startTime)
 		self.endTime = 	self.TimeToUnix(endTime)
 
@@ -146,11 +148,11 @@ class Trader:
 						PrevSimpleAv20 = SimpleAv20
 					
 					else:
-						strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
-						strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20,ExpAvData20,ExpAvData30)
-					
+						#strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
+						#strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20)
+						self.onTop = strat2.ExpSimpleAv(SimpleAv20, ExpAvData20, ExpAvData30, self.onTop, self.player1, self.candles.CloseDate(x))
+					#	strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
 					PrevSimpleAv20 = SimpleAv20
-
 
 		return player1	
 
@@ -174,9 +176,9 @@ class Trader:
 
 if __name__ == "__main__":
 
-	startTime = '20170901'
-	endTime = '20171001'
-	period	= '15'
+	startTime = '20171110'
+	endTime = '20171210'
+	period	= '120'
 	
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
@@ -186,4 +188,4 @@ if __name__ == "__main__":
 	lastprice = (float(tickerlist['last'][20]))
 
 	trader.player1.SowFinalResults(lastprice)		#tickerlist = Last USDT-BTC sell value
-	trader.player2.SowFinalResults(lastprice)
+	#trader.player2.SowFinalResults(lastprice)
