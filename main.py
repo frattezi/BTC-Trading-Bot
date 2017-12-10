@@ -151,6 +151,7 @@ class Trader:
 						#strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
 						#strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20)
 						self.onTop = strat2.ExpSimpleAv(SimpleAv20, ExpAvData20, ExpAvData30, self.onTop, self.player1, self.candles.CloseDate(x))
+					#	strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
 					PrevSimpleAv20 = SimpleAv20
 
 		return player1	
@@ -187,3 +188,4 @@ if __name__ == "__main__":
 	lastprice = (float(tickerlist['last'][20]))
 
 	trader.player1.SowFinalResults(lastprice)		#tickerlist = Last USDT-BTC sell value
+	#trader.player2.SowFinalResults(lastprice)
