@@ -240,9 +240,9 @@ class Trader:
 
 if __name__ == "__main__":
 
-	startTime = '20171110'
-	endTime = '20171210'
-	period	= '120'
+	startTime = '20171010'
+	endTime = '20171110'
+	period	= '15'
 	
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
