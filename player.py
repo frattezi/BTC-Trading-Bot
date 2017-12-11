@@ -57,12 +57,3 @@ class Player:
 		print ('Lucro ou prejuizo Final: ',self.getLucro(btc_current_value))
 		df = pd.DataFrame(self.compras_vector)
 
-	def OrderRules(self,openValue,date,signal,x):
-		if signal == 'BUY':
-			self.Compra(openValue,date)
-			return (openValue,x,'BUY')
-		elif signal == 'SELL':
-			self.Venda(openValue,date)
-			return (openValue,x,'SELL')
-		else:
-			return (openValue,x,'IDLE' )

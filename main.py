@@ -107,6 +107,16 @@ class Trader:
 		self.tickerList = pd.DataFrame(tickerList, columns = ['currencyPair','last', 'lowestAsk', 'highestBid', 'percentChange', 'baseVolume', 'quoteVolume', 'isFrozen', '24hrHigh', '24hrLow'] )
 		return self.tickerList
 
+	def OrderRules(self,openValue,date,signal,x,player):
+		if signal == 'BUY':
+			player.Compra(openValue,date)
+			return (openValue,x,'BUY')
+		elif signal == 'SELL':
+			player.Venda(openValue,date)
+			return (openValue,x,'SELL')
+		else:
+			return (openValue,x,'IDLE' )
+
 	# OBS :Poderia ter apenas dado pass nos 50 primeiros e usar slicing para controlar as janelas - mais facil
 	def Backtest(self):
 		strat1 = BacktestStrategy()
@@ -152,7 +162,7 @@ class Trader:
 					ExpAvData.pop(0)
 
 					#Momento de compra venda ou idle
-					self.BSPoints = player1.OrderRules(self.candles.open(x),self.candles.date(x),self.order,x)
+					self.BSPoints = self.OrderRules(self.candles.open(x),self.candles.date(x),self.order,x,player1)
 
 					if self.BSPoints[2] == 'BUY':
 						self.lugares_compra.append(self.BSPoints)
@@ -251,10 +261,9 @@ if __name__ == "__main__":
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
 	trader.getCandleHistoricalData()
-	trader.Backtest()
+	player = trader.Backtest()
 	tickerlist = trader.Get_Ticker()
 	lastprice = (float(tickerlist['last'][20]))
-
-	trader.player1.SowFinalResults(lastprice)#tickerlist = Last USDT-BTC sell value	
-	#trader.player2.SowFinalResults(lastprice)
+	
+	player.SowFinalResults(lastprice)
 	trader.graphs()
