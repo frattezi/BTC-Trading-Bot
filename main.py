@@ -220,13 +220,16 @@ class Trader:
 		fig.autofmt_xdate()
 		fig.tight_layout()
 
+		#MMS e MME
 		plt.plot(self.simple, 'b--')
 		plt.plot(self.exp20, 'r--')
 		plt.plot(self.exp30, 'r--')
 
+		#pontos de compra
 		xcompra_val = [x[0] for x in self.lugares_compra]
 		ycompra_val = [x[1] for x in self.lugares_compra]
 
+		#pontos de venda
 		xvenda_val = [x[0] for x in self.lugares_venda]
 		yvenda_val = [x[1] for x in self.lugares_venda]
 		
