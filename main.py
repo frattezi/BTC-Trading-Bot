@@ -68,11 +68,6 @@ class Trader:
 					print ('fail connection please try again')
 					break
 
-	#Get all candles data
-	def getCandleHistoricalData(self):
-		self.CandleData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period})
-		self.candles = Candle(self.CandleData)
-	
 		
 	#Convert time format (Ymd to Unix)
 	def TimeToUnix(self,date):
@@ -99,6 +94,11 @@ class Trader:
 					tickerList[label].append(False)
 		return tickerList
 
+	#Get all candles data
+	def getCandleHistoricalData(self):
+		self.CandleData = self.conn.api_query("returnChartData",{"currencyPair":self.pair,"start":self.startTime,"end":self.endTime,"period":self.period})
+		self.candles = Candle(self.CandleData)
+	
 	def Get_Ticker(self):
 		ticker = self.conn.returnTicker()
 		tickerList = self.setTickerList(ticker)		
@@ -189,7 +189,7 @@ class Trader:
 	def MME(self, prevEMA, lastCandleValue, period):
 		if prevEMA != None:
 			multiplier = 2/(period + 1)
-			new_prevEMA = prevEMA
+
 			mme = ((lastCandleValue - prevEMA)) * multiplier + prevEMA
 		else:
 			mme = lastCandleValue
@@ -240,9 +240,9 @@ class Trader:
 
 if __name__ == "__main__":
 
-	startTime = '20171110'
-	endTime = '20171210'
-	period	= '120'
+	startTime = '20171010'
+	endTime = '20171110'
+	period	= '15'
 	
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
