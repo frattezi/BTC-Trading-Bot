@@ -20,9 +20,6 @@ import matplotlib.pyplot as plt
 from matplotlib.finance import candlestick2_ohlc
 import matplotlib.ticker as ticker
 
-
-xdate = []
-
 class Trader:
 
 	def __init__(self,username,password,startTime,endTime,period):
@@ -200,10 +197,13 @@ class Trader:
 		return mme, new_prevEMA
 
 	def graphs(self):
+		xdate = []
+		
 		fig, ax = plt.subplots()
 
 		ax.xaxis.set_major_locator(ticker.MaxNLocator(6))		
 
+		
 		for i in range(0, len(self.candles)):
 			xdate.append(self.candles.getTime(i))
 
