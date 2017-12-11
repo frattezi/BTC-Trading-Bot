@@ -176,7 +176,7 @@ class Trader:
 
 if __name__ == "__main__":
 
-	startTime = '20171112'
+	startTime = '20171012'
 	endTime = '20171211'
 	period	= '1440'
 	
