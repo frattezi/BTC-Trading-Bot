@@ -179,7 +179,7 @@ class Trader:
 
 	def graphs(self):
 		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
-		alldays = DayLocator()              # minor ticks on the days
+		alldays = DayLocator()              	# minor ticks on the days
 		weekFormatter = DateFormatter('%b %d')  # e.g., Jan 12
 		dayFormatter = DateFormatter('%d')      # e.g., 12	
 
