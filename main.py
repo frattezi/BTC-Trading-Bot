@@ -1,3 +1,4 @@
+from __future__ import division
 import pandas as pd
 import numpy as np
 
@@ -15,13 +16,18 @@ from candle import Candle
 from player import Player
 from Strategy import BacktestStrategy
 
+import matplotlib.pyplot as plt
+from matplotlib.finance import candlestick2_ohlc
+import matplotlib.ticker as ticker
+
 class Trader:
 
 	def __init__(self,username,password,startTime,endTime,period):
 		periodList = {'5':300, '15':900, '30':1800, '120':7200, '240':14400, '1440':86400}
 		self.period = periodList[period]
 		self.pair = "USDT_BTC"
-		
+		self.onTop = "SimpleMM"
+
 		self.startTime = self.TimeToUnix(startTime)
 		self.endTime = 	self.TimeToUnix(endTime)
 
@@ -31,6 +37,15 @@ class Trader:
 
 		self.CandleData = None
 		self.candles = [] # CANDLE LIST
+		
+
+		#NECESSIDADES PARA PLOTAR GRAFICO
+		self.simple = []
+		self.exp20 = []
+		self.exp30 = []
+		self.lugares_compra = []
+		self.lugares_venda = []
+		self.tuplinha = ()
 
 		self.conn = self.Connection()
 
@@ -113,6 +128,9 @@ class Trader:
 			#starting average vectors
 			if x <	50:
 				SimpleAvData.append(self.candles.close(x))
+				self.simple.append(self.candles.close(x))
+				self.exp20.append(self.candles.close(x))
+				self.exp30.append(self.candles.close(x))
 				if x < 30:
 					ExpAvData.append(self.candles.close(x))
 				else:
@@ -132,10 +150,13 @@ class Trader:
 					ExpAvData.pop(0)
 
 
-
 					SimpleAv20,SimpleAv50 = self.MMS(SimpleAvData)
 					ExpAvData30, prevExpAv30 = self.MME(ExpAvData30, self.candles.close(x), 30)
 					ExpAvData20, prevExpAv20 = self.MME(ExpAvData20, self.candles.close(x), 20)
+
+					self.simple.append(SimpleAv20)
+					self.exp30.append(ExpAvData30)
+					self.exp20.append(ExpAvData20)
 					
 					'''
 					Agora abaixo vao as estrategias chamadas da class Strategy, podemos
@@ -146,11 +167,16 @@ class Trader:
 						PrevSimpleAv20 = SimpleAv20
 					
 					else:
-						strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
-						strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20,ExpAvData20,ExpAvData30)
-					
+						tuplinha = 0
+						#strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
+						#strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20)
+						self.onTop, self.tuplinha, self.num = strat2.ExpSimpleAv(SimpleAv20, ExpAvData20, ExpAvData30, self.onTop, self.player1, self.candles.CloseDate(x), x)
+						if self.num == 0:
+							self.lugares_venda.append(self.tuplinha)
+						elif self.num == 1:
+							self.lugares_compra.append(self.tuplinha)
+						
 					PrevSimpleAv20 = SimpleAv20
-
 
 		return player1	
 
@@ -162,21 +188,61 @@ class Trader:
 	#Media Movel Exponencial
 	def MME(self, prevEMA, lastCandleValue, period):
 		if prevEMA != None:
-			mme = ((lastCandleValue * period) + (prevEMA * (100-period)))/100
+			multiplier = 2/(period + 1)
 			new_prevEMA = prevEMA
+			mme = ((lastCandleValue - prevEMA)) * multiplier + prevEMA
 		else:
 			mme = lastCandleValue
 			new_prevEMA = mme
 		return mme, new_prevEMA
 
+	def graphs(self):
+		xdate = []
+		
+		fig, ax = plt.subplots()
 
+		ax.xaxis.set_major_locator(ticker.MaxNLocator(6))		
+
+		
+		for i in range(0, len(self.candles)):
+			xdate.append(self.candles.getTime(i))
+
+		def nested_mydate(x, pos):
+			try:
+				return xdate[int(x)]
+			except IndexError:
+				return ''
+
+		ax.xaxis.set_major_formatter(ticker.FuncFormatter(nested_mydate))
+
+		candlestick2_ohlc(ax,self.candles.open2(),self.candles.high2(),self.candles.low2(),self.candles.close2(), width=0.6)
+
+		fig.autofmt_xdate()
+		fig.tight_layout()
+
+		#MMS e MME
+		plt.plot(self.simple, 'b--')
+		plt.plot(self.exp20, 'r--')
+		plt.plot(self.exp30, 'r--')
+
+		#pontos de compra
+		xcompra_val = [x[0] for x in self.lugares_compra]
+		ycompra_val = [x[1] for x in self.lugares_compra]
+
+		#pontos de venda
+		xvenda_val = [x[0] for x in self.lugares_venda]
+		yvenda_val = [x[1] for x in self.lugares_venda]
+		
+		plt.plot(ycompra_val, xcompra_val, 'g^')
+		plt.plot(yvenda_val, xvenda_val, 'y^')
+		plt.show()
 
 
 if __name__ == "__main__":
 
-	startTime = '20170901'
-	endTime = '20171001'
-	period	= '15'
+	startTime = '20171110'
+	endTime = '20171210'
+	period	= '120'
 	
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
@@ -185,5 +251,6 @@ if __name__ == "__main__":
 	tickerlist = trader.Get_Ticker()
 	lastprice = (float(tickerlist['last'][20]))
 
-	trader.player1.SowFinalResults(lastprice)		#tickerlist = Last USDT-BTC sell value
-	trader.player2.SowFinalResults(lastprice)
+	trader.player1.SowFinalResults(lastprice)#tickerlist = Last USDT-BTC sell value	
+	#trader.player2.SowFinalResults(lastprice)
+	trader.graphs()
