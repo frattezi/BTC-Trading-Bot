@@ -176,9 +176,9 @@ class Trader:
 
 if __name__ == "__main__":
 
-	startTime = '20171110'
-	endTime = '20171210'
-	period	= '120'
+	startTime = '20171112'
+	endTime = '20171211'
+	period	= '1440'
 	
 	trader = Trader('','',startTime,endTime,period)
 	trader.Connection()
