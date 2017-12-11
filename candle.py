@@ -36,6 +36,9 @@ class Candle:
 	def CloseDate(self,index):
 		return [self.candle_list['close'][index],self.candle_list['date'][index]]
 
+	def CloseDate(self,index):
+		return [self.candle_list['open'][index],self.candle_list['date'][index]]
+
 	def getClose(self):
 		return self.candle_list['close']
 

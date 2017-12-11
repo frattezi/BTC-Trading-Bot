@@ -27,6 +27,7 @@ class Trader:
 		self.period = periodList[period]
 		self.pair = "USDT_BTC"
 		self.onTop = "SimpleMM"
+		self.order = 'IDLE'
 
 		self.startTime = self.TimeToUnix(startTime)
 		self.endTime = 	self.TimeToUnix(endTime)
@@ -45,7 +46,8 @@ class Trader:
 		self.exp30 = []
 		self.lugares_compra = []
 		self.lugares_venda = []
-		self.tuplinha = ()
+		self.BSPoints = ['','','']
+
 
 		self.conn = self.Connection()
 
@@ -149,6 +151,14 @@ class Trader:
 					ExpAvData.append(self.candles.close(x))
 					ExpAvData.pop(0)
 
+					#Momento de compra venda ou idle
+					self.BSPoints = player1.OrderRules(self.candles.open(x),self.candles.date(x),self.order,x)
+
+					if self.BSPoints[2] == 'BUY':
+						self.lugares_compra.append(self.BSPoints)
+
+					elif self.BSPoints[2] == 'SELL':
+						self.lugares_venda.append(self.BSPoints)
 
 					SimpleAv20,SimpleAv50 = self.MMS(SimpleAvData)
 					ExpAvData30, prevExpAv30 = self.MME(ExpAvData30, self.candles.close(x), 30)
@@ -167,14 +177,8 @@ class Trader:
 						PrevSimpleAv20 = SimpleAv20
 					
 					else:
-						tuplinha = 0
-						#strat1.SimpleAVPrice(self.player1,self.candles.CloseDate(x),SimpleAv20,PrevSimpleAv20)
-						#strat2.ExpSimpleAv(self.player2,self.candles.CloseDate(x),SimpleAv20)
-						self.onTop, self.tuplinha, self.num = strat2.ExpSimpleAv(SimpleAv20, ExpAvData20, ExpAvData30, self.onTop, self.player1, self.candles.CloseDate(x), x)
-						if self.num == 0:
-							self.lugares_venda.append(self.tuplinha)
-						elif self.num == 1:
-							self.lugares_compra.append(self.tuplinha)
+						self.onTop,self.order = strat2.ExpSimpleAv(SimpleAv20, ExpAvData20, ExpAvData30, self.onTop)
+
 						
 					PrevSimpleAv20 = SimpleAv20
 
@@ -189,8 +193,9 @@ class Trader:
 	def MME(self, prevEMA, lastCandleValue, period):
 		if prevEMA != None:
 			multiplier = 2/(period + 1)
-
+			new_prevEMA = prevEMA
 			mme = ((lastCandleValue - prevEMA)) * multiplier + prevEMA
+		
 		else:
 			mme = lastCandleValue
 			new_prevEMA = mme
@@ -201,9 +206,8 @@ class Trader:
 		
 		fig, ax = plt.subplots()
 
-		ax.xaxis.set_major_locator(ticker.MaxNLocator(6))		
+		ax.xaxis.set_major_locator(ticker.MaxNLocator(6))
 
-		
 		for i in range(0, len(self.candles)):
 			xdate.append(self.candles.getTime(i))
 
