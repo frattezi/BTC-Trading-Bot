@@ -12,17 +12,15 @@ class BacktestStrategy:
 			
 
 
-	def ExpSimpleAv(self, SimpleMM, Expo20MM, Expo30MM, onTop, player, candle, x):
+	def ExpSimpleAv(self, SimpleMM, Expo20MM, Expo30MM, onTop):
 		if onTop == "SimpleMM":
 			if Expo20MM > SimpleMM and Expo30MM > SimpleMM:
 				onTop = "ExponentialMM"
-				player.Compra(candle[0], candle[1])
-				return onTop, (SimpleMM, x), 1
+				return onTop,'BUY'
 
 		elif onTop == "ExponentialMM":
 			if SimpleMM > Expo20MM and SimpleMM > Expo30MM:
 				onTop = "SimpleMM"
-				player.Venda(candle[0], candle[1])
-				return onTop, (SimpleMM, x), 0
-		return onTop, (SimpleMM, x), -1
+				return onTop, 'SELL'
+		return onTop,'IDLE'
 

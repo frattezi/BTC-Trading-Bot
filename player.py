@@ -12,6 +12,8 @@ class Player:
 		self.stop_limit = 2000
 		self.lucro = 0
 
+	def ReturnBuySellLog(self):
+		return self.compras_vector, self.vendas_vector
 	
 	def PlayerRules(self,valor):
 		if self.money < valor:
@@ -28,7 +30,6 @@ class Player:
 	
 	def Compra(self, valor,date):
 		if self.PlayerRules(valor):
-			print ('Compra')
 			self.money = self.money - valor
 			self.quantidade_ativos = self.quantidade_ativos + 1
 			self.compras_vector.append([valor,date])
@@ -55,8 +56,13 @@ class Player:
 		print ('Valor em btc: ', self.CheckBtcBalance(btc_current_value))
 		print ('Lucro ou prejuizo Final: ',self.getLucro(btc_current_value))
 		df = pd.DataFrame(self.compras_vector)
-		print ('compras:')
-		print (df)
-		print ('vendas:')
-		df = pd.DataFrame(self.vendas_vector)
-		print(df)
+
+	def OrderRules(self,openValue,date,signal,x):
+		if signal == 'BUY':
+			self.Compra(openValue,date)
+			return (openValue,x,'BUY')
+		elif signal == 'SELL':
+			self.Venda(openValue,date)
+			return (openValue,x,'SELL')
+		else:
+			return (openValue,x,'IDLE' )
