@@ -18,9 +18,11 @@ class BacktestStrategy:
 				onTop = "ExponentialMM"
 				player.Compra(candle[0], candle[1])
 				return onTop, (SimpleMM, x), 1
+
 		elif onTop == "ExponentialMM":
 			if SimpleMM > Expo20MM and SimpleMM > Expo30MM:
 				onTop = "SimpleMM"
 				player.Venda(candle[0], candle[1])
 				return onTop, (SimpleMM, x), 0
 		return onTop, (SimpleMM, x), -1
+
