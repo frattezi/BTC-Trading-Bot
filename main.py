@@ -15,6 +15,10 @@ from candle import Candle
 from player import Player
 from Strategy import BacktestStrategy
 
+import matplotlib.pyplot as plt
+from matplotlib.finance import candlestick2_ohlc
+from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY
+
 class Trader:
 
 	def __init__(self,username,password,startTime,endTime,period):
@@ -33,6 +37,8 @@ class Trader:
 
 		self.CandleData = None
 		self.candles = [] # CANDLE LIST
+		self.simple = []
+		self.exp = []
 
 		self.conn = self.Connection()
 
@@ -171,7 +177,25 @@ class Trader:
 			new_prevEMA = mme
 		return mme, new_prevEMA
 
+	def graphs(self):
+		mondays = WeekdayLocator(MONDAY)        # major ticks on the mondays
+		alldays = DayLocator()              # minor ticks on the days
+		weekFormatter = DateFormatter('%b %d')  # e.g., Jan 12
+		dayFormatter = DateFormatter('%d')      # e.g., 12	
 
+		fig, ax = plt.subplots()
+		
+		fig.subplots_adjust(bottom=0.2)
+		ax.xaxis.set_major_locator(mondays)
+		ax.xaxis.set_minor_locator(alldays)
+		ax.xaxis.set_major_formatter(weekFormatter)
+		
+		candlestick2_ohlc(ax,trader.candles.open2(),trader.candles.high2(),trader.candles.low2(),trader.candles.close2(),width=0.6)
+		
+		plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+		#plt.setp(ax.get_xticklabels(), rotation=45)
+		fig.tight_layout()
+		plt.show()
 
 
 if __name__ == "__main__":
@@ -187,5 +211,6 @@ if __name__ == "__main__":
 	tickerlist = trader.Get_Ticker()
 	lastprice = (float(tickerlist['last'][20]))
 
-	trader.player1.SowFinalResults(lastprice)		#tickerlist = Last USDT-BTC sell value
+	trader.player1.SowFinalResults(lastprice)#tickerlist = Last USDT-BTC sell value	
 	#trader.player2.SowFinalResults(lastprice)
+	trader.graphs()
