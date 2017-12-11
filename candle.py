@@ -50,4 +50,7 @@ class Candle:
 
 	def close2(self):
 		return self.candle_list['close']
+
+	def getTime(self, x):
+		return self.candle_list['date'][x]
 	
